@@ -1,8 +1,12 @@
 # Mirawatt Client
 
 ## Initial pump from mysql repo
+Reproduce feds.php for JSON.
 
-
+  scp -p php/feedsJSON.php cantor:/var/www/iMetrical/
+  # or
+  rsync -av --progress php/feedsJSON.php cantor:/var/www/iMetrical/
+  
 ## Timezones
 Found this binding to time.h [node-time](https://github.com/TooTallNate/node-time).
 
