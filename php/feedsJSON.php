@@ -32,7 +32,7 @@ $feeds = array(
     'observations'=>array(array('watt_hour',24) )),
     array( 'name'=>"Month", 'scopeId'=>3, 'aggregate'=>array("watt_day",30),
     'observations'=>array(array('watt_day',30) )),
-    array( 'name'=>"Year", 'scopeId'=>3, 'aggregate'=>array("watt_day",365),
+    array( 'name'=>"Year", 'scopeId'=>4, 'aggregate'=>array("watt_day",365),
     //'customqy'=>'select min(stamp) as month,max(stamp),avg(watt),count(*),sum(watt) from watt_day group by left(stamp,7) order by month desc limit 24')
     'customqy'=>'select min(stamp) as month,round(avg(watt)),count(*),sum(watt) from watt_day group by left(stamp,7) order by month desc limit 24')
 );
