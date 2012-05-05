@@ -36,7 +36,7 @@ $feeds = array(
     'customqy'=>'select min(stamp) as month,round(avg(watt)),count(*),sum(watt) from watt_day group by left(stamp,7) order by month desc limit 24')
 );
 
-if ($scope!='all'&& $s >= 0 && $s <= 4) {
+if ($scope!='all' && $scope >= 0 && $scope <= 4) {
     $feeds = array($feeds[$scope]);
 }
 
