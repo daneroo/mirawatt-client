@@ -1,21 +1,20 @@
 <?php
-    // This file is part of mirawatt-server
-    // It came from feed.php in green/scalr-utils/php/feeds.php
+// This file is part of mirawatt-client
+// It came from feed.php in green/scalr-utils/php/feeds.php
 
-    // header("Content-type: text/plain");
-    header("Content-type: application/json");
+// It no longer requires the aggregate second query..
 
-    // what I need to add is this fot Year by Month
-    // select min(stamp),max(stamp),avg(watt),count(*),sum(watt) from ((select stamp,watt from watt_day  order by stamp desc) as agg) group by left(stamp,7);
+// header("Content-type: text/plain");
+header("Content-type: application/json");
 
-    // Parse params
-    //print "<!-- Scope param : ".htmlspecialchars($_GET["scope"])."  --> \n"; 
-// $scope=0;
-// if (array_key_exists('scope', $_GET)) {
-//     $scope=intval(htmlspecialchars($_GET["scope"]));
-//  }
-// if ($scope>4) $scope = fmod($scope,5);
-// if ($scope<0) $scope = fmod(intval(time()/10),5);
+
+// Parse params
+$scope='all';
+if (array_key_exists('scope', $_GET)) {
+    $scope=intval(htmlspecialchars($_GET["scope"]));
+}
+if ($scope>4) $scope = fmod($scope,5);
+if ($scope<0) $scope = fmod(intval(time()/10),5);
 
 
 // Connect to db
@@ -37,6 +36,9 @@ $feeds = array(
     'customqy'=>'select min(stamp) as month,round(avg(watt)),count(*),sum(watt) from watt_day group by left(stamp,7) order by month desc limit 24')
 );
 
+if ($scope!='all'&& $s >= 0 && $s <= 4) {
+    $feeds = array($feeds[$scope]);
+}
 
 function aggregateForFeed($table,$samples) {
     $subQy = queryForTableSince($table,NULL,$samples);
@@ -75,7 +77,7 @@ function entriesForQuery($sql,$ary) {
         $stamp = substr($row[0],0,10).'T'.substr($row[0],-8).'Z';
         $lastStamp=$row[0];
         $watt = $row[1];
-        array_push($ary,array($stamp,$watt));
+        array_push($ary,array('t'=>$stamp,'v'=>array($watt)));
         //$formatter($stamp,$watt);
     }
     mysql_free_result($result);
@@ -88,11 +90,11 @@ function feedFormatter($feed,$aggrow) {
     $stamp=$aggrow[1];
     $value=round($aggrow[2]);
     return array(
+        'sensorId'=>array("s1"),
         'scopeId'=>$scopeId,
         'name'=>$name,
-        'name'=>$name,
-        'stamp'=>$stamp,
-        'value'=>$value
+        // 'stamp'=>$stamp,
+        // 'value'=>$value
     );
 }
 
@@ -123,7 +125,12 @@ foreach ($feeds as $feed) {
     $feedObj['observations']=$results;
     array_push($feedsObj,$feedObj);
  }
- echo json_encode($feedsObj)."\n"; //,JSON_PRETTY_PRINT - only in 5.4
+ $wrapper=array( 
+     "version"   =>"1.0",  
+     "accountId" => "daniel",
+     "feeds"     => $feedsObj
+     );
+ echo json_encode($wrapper)."\n"; //,JSON_PRETTY_PRINT - only in 5.4
 
 
 mysql_close($conn);

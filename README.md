@@ -1,7 +1,11 @@
 # Mirawatt Client
 
-## Initial pump from mysql repo
-Reproduce feds.php for JSON.
+The new php client `php/feedJSON.php` now conforms to the mirawatt-api.
+It omits the feed level stamp,value. it adds sensorId array, and values are presented as an array of length1.
+
+
+## deploy php bridge from imetrical mysql.
+  Reproduce feeds.php for JSON. (green/scalr-utils/php/feeds.php)
 
   scp -p php/feedsJSON.php cantor:/var/www/iMetrical/
   # or
@@ -9,7 +13,9 @@ Reproduce feds.php for JSON.
 
 To execute and pretty print:
 
-  curl -s http://cantor/iMetrical/feedsJSON.php|python -mjson.tool  
+  curl -s http://cantor/iMetrical/feedsJSON.php|python -mjson.tool >example.json
+
+
 
 ## Timezones
 Found this binding to time.h [node-time](https://github.com/TooTallNate/node-time).
