@@ -13,9 +13,6 @@ $scope='all';
 if (array_key_exists('scope', $_GET)) {
     $scope=intval(htmlspecialchars($_GET["scope"]));
 }
-if ($scope>4) $scope = fmod($scope,5);
-if ($scope<0) $scope = fmod(intval(time()/10),5);
-
 
 // Connect to db
 $dbname = 'ted'; $dbhost = 'localhost'; $dbuser = 'aviso'; $dbpass = '';
@@ -36,7 +33,7 @@ $feeds = array(
     'customqy'=>'select min(stamp) as month,round(avg(watt)),count(*),sum(watt) from watt_day group by left(stamp,7) order by month desc limit 24')
 );
 
-if ($scope!='all' && $scope >= 0 && $scope <= 4) {
+if ($scope!=='all' && $scope >= 0 && $scope <= 4) {
     $feeds = array($feeds[$scope]);
 }
 
@@ -122,7 +119,7 @@ foreach ($feeds as $feed) {
         //echo $feed['customqy']."\n";
         entriesForQuery($feed['customqy'] ,&$results);
     }
-    $feedObj['observations']=$results;
+    $feedObj['obs']=$results;
     array_push($feedsObj,$feedObj);
  }
  $wrapper=array( 
