@@ -74,8 +74,7 @@ function entriesForQuery($sql,$ary) {
         $stamp = substr($row[0],0,10).'T'.substr($row[0],-8).'Z';
         $lastStamp=$row[0];
         $watt = $row[1];
-        array_push($ary,array('t'=>$stamp,'v'=>array($watt)));
-        //$formatter($stamp,$watt);
+        array_push($ary,array('t'=>$stamp,'v'=>array(floatval($watt))));
     }
     mysql_free_result($result);
     return $lastStamp;
