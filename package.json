@@ -3,10 +3,6 @@
   "version":"0.0.1",
   "dependencies":{
       "dnode": "0.9.x",
-      "connect-jsonrpc":"0.0.x",
-      "request":"2.9.x",
-      "underscore":">0",
-      "underscore.string":">0",
-      "mongodb":"0.9.x"
+      "request":"2.9.x"
   }
 }
