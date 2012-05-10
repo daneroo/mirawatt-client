@@ -34,59 +34,72 @@ if (0) dnode.connect(7070, function (remote, conn) {
 
 function fetch(cb){
   console.log('fetching')
-    request.get({uri:"http://cantor.imetrical.com/iMetrical/feedsJSON.php", json : true},function(error,response,body){
-      console.log('fetched')
-        cb(error,body);
-    });
-}
-
-function by2(feeds){
-  feeds.feeds.forEach(function(feed,scopeId){
-    console.log('by2 scope',feed.scopeId,feed.name);
-    feed.sensorId=["s1","s2"];
-    feed.obs.forEach(function(o,i){
-      var v=o.v[0]/8;
-      o.v[0]=v*3;
-      o.v.push(v*5);
-    });
+  request.get({uri:"http://cantor.imetrical.com/iMetrical/feedsJSON.php", json : true},function(error,response,body){
+    cb(error,body);
   });
 }
+
+function byN(feeds,N){
+  // clone
+  feeds = JSON.parse(JSON.stringify(feeds));
+  feeds.feeds.forEach(function(feed,scopeId){
+    feed.sensorId=[];//"s1","s2"
+    for (i=1;i<=N;i++){
+      feed.sensorId.push('s'+i);
+    }
+    feed.obs.forEach(function(o){ // mult by [1,2,..,N]/(N*(N+1)/2)
+      var v=o.v[0]/(N*(N+1)/2);
+      o.v=[];
+      var i;
+      for (i=1;i<=N;i++){
+        var vi=Math.round(v*i*10)/10;
+        o.v.push(vi);
+      }
+    });
+  });
+  return feeds;
+}
+
+function push(userId,feeds){
+  client.call('set',[userId,feeds],function(err,result){
+      if (err){
+          console.log('remote.set('+userId+',',feeds,') Error: ',err);
+      } else {
+          // console.log('remote.set('+userId+',',feeds,') = ',result);
+      }
+  });
+}
+
+function getCheck(userId){
+  client.call('get',[userId],function(err,result){
+      if (err){
+          console.log('remote.get('+userId+') Error: ',err);
+      } else {
+          console.log('remote.get('+userId+') = ');
+          result.forEach(function(sc,i){
+              console.log('scope',sc.scopeId,sc.name);
+              sc.obs=sc.obs.slice(0,1);
+              sc.obs.push('...');
+          });
+          console.log(JSON.stringify(result,null,2))
+      }
+  });
+}
+
 // push, then get
-function fetchPushThenGet(){
+function fetchAndPush(){
     var userId='daniel';
     var feeds={stamp:new Date(),value:Math.random()};
     fetch(function(err,feeds){
-        // console.log('calling set',userId /*,feeds*/);
-        client.call('set',[userId,feeds],function(err,result){
-            if (err){
-                console.log('remote.set('+userId+',',feeds,') Error: ',err);            
-            } else {
-                // console.log('remote.set('+userId+',',feeds,') = ',result);            
-            }
-            if (0)client.call('get',[userId],function(err,result){
-                if (err){
-                    console.log('remote.get('+userId+') Error: ',err);            
-                } else {
-                    console.log('remote.get('+userId+') = ');            
-                    result.forEach(function(sc,i){
-                        console.log('scope',sc.scopeId,sc.name);
-                        sc.obs=sc.obs.slice(0,1);
-                        sc.obs.push('...');
-                    });
-                    // console.log(JSON.stringify(result,null,2))
-                }
-            });
-        });
-        by2(feeds);
-        client.call('set',[userId+'by2',feeds],function(err,result){
-            if (err){
-                console.log('remote.set('+userId+',',feeds,') Error: ',err);            
-            } else {
-                // console.log('remote.set('+userId+',',feeds,') = ',result);            
-            }
+        push(userId,feeds);
+        // if (1) getCheck(userId);
+        var Ns=[2,4,8];
+        Ns.forEach(function(N){
+          push(userId+'By'+N,byN(feeds,N));
+          // if (1) getCheck(userId+'By'+N);        
         });
     });
 }
 
-//setTimeout(fetchPushThenGet,1000);
-setInterval(fetchPushThenGet,2000);
+//setTimeout(fetchAndPush,1000);
+setInterval(fetchAndPush,1000);
