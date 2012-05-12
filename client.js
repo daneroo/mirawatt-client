@@ -93,7 +93,7 @@ function fetchAndPush(){
     fetch(function(err,feeds){
         push(userId,feeds);
         // if (1) getCheck(userId);
-        var Ns=[2,4,8];
+        var Ns=[2,8];//[2,4,8];
         Ns.forEach(function(N){
           push(userId+'By'+N,byN(feeds,N));
           // if (1) getCheck(userId+'By'+N);        
