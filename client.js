@@ -12,7 +12,7 @@ var client = jsonrpc(endpoint);
 
 
 function fetch(cb){
-  console.log(new Date().toISOString(),'fetching')
+  console.log(new Date().toISOString(),'fetching','for',endpoint);
   request.get({uri:"http://cantor.imetrical.com/iMetrical/feedsJSON.php", json : true},function(error,response,body){
     cb(error,body);
   });
