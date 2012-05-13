@@ -81,4 +81,4 @@ function fetchAndPush(){
 }
 
 //setTimeout(fetchAndPush,1000);
-setInterval(fetchAndPush,1000);
+setInterval(fetchAndPush,3000);
