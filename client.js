@@ -3,7 +3,7 @@ var dnode = require('dnode');
 var jsonrpc = require('./lib/jsonrpc-client');
 var request = require('request');
 
-var endpoint='http://0.0.0.0:3000/jsonrpc';
+var endpoint='http://0.0.0.0:8080/jsonrpc';
 if (process.argv.length>2){
     endpoint = endpoint=process.argv[2];
 }

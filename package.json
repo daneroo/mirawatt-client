@@ -3,6 +3,7 @@
   "version":"0.0.1",
   "dependencies":{
       "dnode": "0.9.x",
+      "socket.io-client":"0.9.x",
       "request":"2.9.x"
   }
 }
