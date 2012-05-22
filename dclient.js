@@ -20,37 +20,25 @@ stream.destroy = stream.end = function () {
     stream.emit('end');
 };
 
+['connecting','connect','connect_failed','disconnect','reconnecting','reconnect','error','end'].forEach(function(ev){
+  sock.on(ev,function(){
+    console.log('  --sock',ev,new Date().toISOString());
+  });
+});
+
 sock.on('message', function (msg) {
     stream.emit('data', msg);
 });
 
-sock.on('connecting', function () {
-  console.log('  --sock connecting',new Date().toISOString());
-});
-
 sock.on('connect', function () {
-    console.log('  --sock connect',new Date().toISOString());
     stream.emit('connect');
 });
 
-sock.on('connect_failed', function () {
-  console.log('  --sock connect_failed',new Date().toISOString());
-});
-
 sock.on('disconnect', function () {
-  console.log('  --sock disconnect',new Date().toISOString());
   stream.emit('end');
 });
 
-sock.on('reconnecting', function () {
-  console.log('  --sock reconnecting',new Date().toISOString());
-});
-
-sock.on('reconnect', function () {
-  console.log('  --sock reconnect',new Date().toISOString());
-});
-
-var dn = dnode(function (client, conn) {
+dnode(function (client, conn) {
   console.log('*****new client/conn',conn.id);
   this.type='sensorhub';
   ['connect','ready','remote','end','error','refused','drop','reconnect'].forEach(function(ev){
@@ -60,7 +48,6 @@ var dn = dnode(function (client, conn) {
   });
   var intervalId;
   conn.on('ready',function(){
-    theConn=conn;
     console.log('dnode ready',conn.id);
     intervalId=setInterval(doZing,3000,client)
   });
@@ -68,7 +55,12 @@ var dn = dnode(function (client, conn) {
     console.log('dnode end',conn.id);
     clearInterval(intervalId);    
   });
-}).connect(stream /*, {reconnect:5000}*/);
+  setTimeout(function(){
+    conn.end();
+    // conn.close();
+  },10000);
+}).connect(stream /*, {reconnect:5000}*/);;
+
 
 setInterval(function(){
   var p = sock.socket;
@@ -79,6 +71,7 @@ setInterval(function(){
   }
   // console.log('sock monitor',sock);
 },5000);
+
 // setInterval(doZing,3000);
 
 function doZing(remote,cb){
