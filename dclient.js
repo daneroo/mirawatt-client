@@ -1,96 +1,66 @@
-var io = require('socket.io-client');
-var sock = io.connect('http://localhost:8080',{
-  reconnect:false,
-  //'max reconnection attempts':3
-});
-// var sock = io.connect('http://mw-spec.cloudfoundry.com:80');
-// var sock = io.connect('http://mw-spec.jit.su:80');
 var dnode = require('dnode');
-var Stream = require('stream');
 
-var stream = new Stream;
-stream.writable = true;
-stream.readable = true;
-stream.write = function (buf) {
-    sock.emit('message', String(buf));
-};
-stream.destroy = stream.end = function () {
-    console.log('  --stream destroy-end');
-    sock.disconnect();
-    stream.emit('end');
-};
+// http://mw-spec.cloudfoundry.com:80
+// http://mw-spec.jit.su:80
+var endpoint='http://0.0.0.0:8080';
+if (process.argv.length>2){
+    endpoint = endpoint=process.argv[2];
+}
 
-['connecting','connect','connect_failed','disconnect','reconnecting','reconnect','error','end'].forEach(function(ev){
-  sock.on(ev,function(){
-    console.log('  --sock',ev,new Date().toISOString());
-  });
-});
+var accountIds=['daniel','danielBy2','danielBy8'];
 
-sock.on('message', function (msg) {
-    stream.emit('data', msg);
-});
-
-sock.on('connect', function () {
-    stream.emit('connect');
-});
-
-sock.on('disconnect', function () {
-  stream.emit('end');
-});
+var dnodeStream = require('./lib/dnode-stream');
+var stream = dnodeStream(endpoint);
 
 dnode(function (client, conn) {
   console.log('*****new client/conn',conn.id);
   this.type='sensorhub';
-  ['connect','ready','remote','end','error','refused','drop','reconnect'].forEach(function(ev){
-    conn.on(ev,function(){
-      console.log('  --dnode.conn',conn.id,ev,new Date().toISOString());
-    });
-  });
+  this.accountIds = accountIds;
+  
+  // exported function
+
+  var subscriptions=[]; // [{accountId:..,scopeId:...},...]
+  this.subscribe = function(newSubscriptions){
+    subscriptions=newSubscriptions;
+    console.log('client subscribed',subscriptions);
+    
+    // could let the server know if we dont have this feed ?
+    if (cb) cb(null,null);
+  }
+  
+  if (1) debugConn(conn);
+  
   var intervalId;
   conn.on('ready',function(){
-    console.log('dnode ready',conn.id);
-    intervalId=setInterval(doZing,3000,client)
+    intervalId=setInterval(publish,1000)
   });
+  
   conn.on('end',function(){
-    console.log('dnode end',conn.id);
     clearInterval(intervalId);    
   });
-  setTimeout(function(){
-    conn.end();
-    // conn.close();
-  },10000);
-}).connect(stream /*, {reconnect:5000}*/);;
 
-
-setInterval(function(){
-  var p = sock.socket;
-  console.log('sock monitor',p.connected,p.connecting,p.reconnecting/*,p.transport,p.options*/);
-  if (!(p.connected || p.connecting || p.reconnecting)){
-    console.log('reconnect...');
-    sock.socket.connect();
-  }
-  // console.log('sock monitor',sock);
-},5000);
-
-// setInterval(doZing,3000);
-
-function doZing(remote,cb){
-  if (!sock.socket.connected) {
-    console.log('doZing - should not happen!')
-  }
-  if (sock.socket.connected && remote){
-    console.log('doZing',new Date().toISOString());
-    [10,/* 0, 1, 10, 1234*/].forEach(function(zing){
-      remote.zing(zing,function (err,zong) {
-        if (err){
-          console.dir(err);
-        } else {
-          console.log('zing-zong: ' + zong);
-        }
-        if (cb) cb();
+  function publish(){
+    console.log('publish',new Date().toISOString());
+    subscriptions.forEach(function(subscription){
+      console.log('--subscription',subscription);
+      var feedIds=['sample','sampleBy2','daniel','danielBy2','danielBy8']
+      var feedId= feedIds.indexOf(subscription.accountId)+1;
+      feedId=feedId*100+subscription.scopeId;
+      client.zing(feedId,function (err,zong) {
+        // might be a good place to unsubscribe ? err: DONTCARE
+        if (err) { console.log(err); return; }
+        console.log('published: ' + zong);
       });
     });
-  } else {
-    console.log('skipping doZing');
   }
+
+}).connect(stream);
+
+
+function debugConn(conn){
+  ['connect','ready','remote','end','error','refused','drop','reconnect'].forEach(function(ev){
+    conn.on(ev,function(){
+      console.log('  --dnode.conn',ev,conn.id,new Date().toISOString());
+    });
+  });  
 }
