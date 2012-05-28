@@ -1,4 +1,5 @@
 var dnode = require('dnode');
+var mirawatt = require('./lib/mirawatt');
 
 // http://mw-spec.cloudfoundry.com:80
 // http://mw-spec.jit.su:80
@@ -20,12 +21,12 @@ dnode(function (client, conn) {
   // exported function
 
   var subscriptions=[]; // [{accountId:..,scopeId:...},...]
-  this.subscribe = function(newSubscriptions){
+  this.subscribe = function(newSubscriptions,cb){
     subscriptions=newSubscriptions;
     console.log('client subscribed',subscriptions);
     
     // could let the server know if we dont have this feed ?
-    if (cb) cb(null,null);
+    if (cb) cb(null,'OK');
   }
   
   if (1) debugConn(conn);
@@ -40,17 +41,29 @@ dnode(function (client, conn) {
   });
 
   function publish(){
+    
+    // TODO, 
+    //  use var minDelayForScope=[900,5000,10000,10000,10000][scopeId];
+    // use maxDelay to push even if no client...
+    //  cache feed for all daniels...
+    // rebalance in server on (di)connect, and subscribe.
+    
     console.log('publish',new Date().toISOString());
     subscriptions.forEach(function(subscription){
       console.log('--subscription',subscription);
-      var feedIds=['sample','sampleBy2','daniel','danielBy2','danielBy8']
-      var feedId= feedIds.indexOf(subscription.accountId)+1;
-      feedId=feedId*100+subscription.scopeId;
-      client.zing(feedId,function (err,zong) {
-        // might be a good place to unsubscribe ? err: DONTCARE
-        if (err) { console.log(err); return; }
-        console.log('published: ' + zong);
-      });
+
+      var accountId = subscription.accountId;
+      if ('daniel'===accountId.substring(0,6)){
+        console.log(accountId,'thats me');
+        mirawatt.iMetricalFetch(function(err,feeds){
+          var N=accountId.substr(-1); // danielBy2,4,8...
+          if (N>0){
+            feeds = mirawatt.byN(feeds,N);
+          }
+          client.set(accountId,feeds);
+        });
+      }
+      
     });
   }
 
