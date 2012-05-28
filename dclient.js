@@ -57,7 +57,7 @@ dnode(function (client, conn) {
       if ('daniel'===accountId.substring(0,6)){
         console.log(accountId,'thats me');
         mirawatt.iMetricalFetch(function(err,feeds){
-          var N=accountId.substr(-1); // danielBy2,4,8...
+          var N=parseInt(accountId.substr(-1)); // danielBy2,4,8...
           if (N>0){
             feeds = mirawatt.byN(feeds,N);
           }
