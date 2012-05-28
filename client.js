@@ -20,6 +20,21 @@ function push(userId,feeds){
   });
 }
 
+// push, then get
+function fetchAndPush(){
+    var userId='daniel';
+    console.log(new Date().toISOString(),'fetching','for',endpoint);    
+    mirawatt.iMetricalFetch(function(err,feeds){
+        push(userId,feeds);
+        // if (1) getCheck(userId);
+        var Ns=[2,8];//[2,4,8];
+        Ns.forEach(function(N){
+          push(userId+'By'+N,mirawatt.byN(feeds,N));
+          // if (1) getCheck(userId+'By'+N);        
+        });
+    });
+}
+
 function getCheck(userId){
   client.call('get',[userId],function(err,result){
       if (err){
@@ -34,21 +49,6 @@ function getCheck(userId){
           console.log(JSON.stringify(result,null,2))
       }
   });
-}
-
-// push, then get
-function fetchAndPush(){
-    var userId='daniel';
-    console.log(new Date().toISOString(),'fetching','for',endpoint);    
-    mirawatt.iMetricalFetch(function(err,feeds){
-        push(userId,feeds);
-        // if (1) getCheck(userId);
-        var Ns=[2,8];//[2,4,8];
-        Ns.forEach(function(N){
-          push(userId+'By'+N,mirawatt.byN(feeds,N));
-          // if (1) getCheck(userId+'By'+N);        
-        });
-    });
 }
 
 //setTimeout(fetchAndPush,1000);
