@@ -44,8 +44,9 @@ dnode(function (client, conn) {
     
     // TODO, 
     //  use var minDelayForScope=[900,5000,10000,10000,10000][scopeId];
-    // use maxDelay to push even if no client...
+    //  use maxDelay to push even if no client...
     //  cache feed for all daniels...
+    // limit push to subscribed scopes.
     // rebalance in server on (di)connect, and subscribe.
     
     console.log('publish',new Date().toISOString());
