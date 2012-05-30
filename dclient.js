@@ -2,19 +2,40 @@ var dnode = require('dnode');
 var mirawatt = require('./lib/mirawatt');
 var dnodeStream = require('./lib/dnode-stream');
 
-var options = {
-    // http://mw-spec.cloudfoundry.com:80
-    // http://mw-spec.jit.su:80
-    endpoint: 'http://0.0.0.0:8080',
-    accountIds: ['daniel','danielBy2','danielBy8'],
-    forcePublishAfterDelay: 30000,  // forced publish, even if no subscription
-    minDelayOtherThanLive: 10000,  // don't send scope>Live if delay < minDelay    
-    publishInterval: 1000 // delay for publish loop
+var options = require('optimist').options('endpoint', {
+  alias: 'e',
+  default : 'http://0.0.0.0:8080'
+}).options('by', {
+  alias: 'b',
+  default : [2,8],
+  describe: ' sensor counts to simulate (may be multiple)'
+}).options('forcePublishAfterDelay', {
+  default: 30000,
+  describe: 'Delay after which, publish, even if no acive subscription'
+}).options('minDelayOtherThanLive', {
+  default: 10000,
+  describe: "Don't send scope>Live if delay < minDelay"
+}).options('publishInterval', {
+  default: 1000,
+  describe: 'Delay for publish loop'
+}).options('help', {
+  alias: 'h',
+  describe: 'Show this message'
+}).argv;
+
+if (options.help) {
+  require('optimist').showHelp();
+  process.exit();
 }
 
-// TODO: use optimist
-if (process.argv.length>2){
-    options.endpoint = process.argv[2];
+options.accountIds=['daniel'];
+if (options.by!==false && !(Array.isArray(options.by))) {
+  // --no-by : options.by==fasle
+  // --by 3 --by 4 : options.by==[3,4]
+  options.by = [options.by];
+}
+if (Array.isArray(options.by)) {
+  options.by.forEach(function(by){ options.accountIds.push('danielBy'+by)});
 }
 
 
