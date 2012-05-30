@@ -7,7 +7,9 @@ var options = {
     // http://mw-spec.jit.su:80
     endpoint: 'http://0.0.0.0:8080',
     accountIds: ['daniel','danielBy2','danielBy8'],
-    publishInterval: 1000
+    forcePublishAfterDelay: 30000,  // forced publish, even if no subscription
+    minDelayOtherThanLive: 10000,  // don't send scope>Live if delay < minDelay    
+    publishInterval: 1000 // delay for publish loop
 }
 
 // TODO: use optimist
@@ -47,9 +49,12 @@ dnode(function (client, conn) {
   /*
   This function is run every options.publishInterval milis,
     It will fetch source data  - from (mirawatt.iMetricalFetch)
-    It push out any subscribed feeds.
-      -rate limited :minDelay, for scopes other than Live.
-    It will push all feeds on a regular schedule. maxDelay
+      -only once per run, and only if required
+    It will push all feeds on a regular schedule. forcePublishAfterDelay
+    It will push out any subscribed feeds.
+      - if subscription is to scopeId==0 (Live) send only that scope
+      - otherwise send All scopes, but not before minDelay has expired
+      This in effect rate limits scope>Live
     
     Simplification: Given the: feed sizes [ 1613, 2393, 999, 1251, 1013 ]
     And given that scopes other than Live, are infrequently pushed,
@@ -57,13 +62,7 @@ dnode(function (client, conn) {
       -If any other feed is pushed, push all scopes.
       
   */
-  // TODO, 
-  //  use var minDelayForScope=[900,5000,10000,10000,10000][scopeId];
-  //  use maxDelay to push even if no client...
-  //  cache feed for all daniels...
-  // limit push to subscribed scopes.
-  // rebalance in server on (di)connect, and subscribe.
-  var lastPushed = { // timestamp of last time we pushed full feed/ per accountId.
+  var lastPushedOtherThanLive = { // timestamp of last time we pushed full feed/ per accountId.
     // accountId: stampForLastPushOtherThanLive
   };
   function sizes(feeds){
@@ -74,48 +73,55 @@ dnode(function (client, conn) {
     return sz;
   }
   function publish(){
-    console.log('publish',new Date().toISOString());
-    
-    // forced publish, even if no subscription
-    // Live,Hour,Day,Month,Year
-    var maxDelay = 10000;
+    // console.log('publish',new Date().toISOString());
     var now=+new Date;
-    console.log(options.accountIds);
     
-    toPublish = []; // fake subscriptions - from expired MaxDelay
+    toPublish = []; // simulate subscriptions - when delay > forcePublishAfterDelay
     options.accountIds.forEach(function(accountId){
-      var delay = now - (lastPushed[accountId]||0);
-      if (delay > maxDelay) {
+      var delay = now - (lastPushedOtherThanLive[accountId]||0);
+      if (delay > options.forcePublishAfterDelay) {
         var scopeOtherThanLive=1;
         toPublish.push({accountId:accountId,scopeId:scopeOtherThanLive});
       }
     });
     
     // actual subscriptions are simply appended to toPublish, 
-    //   a particular account will not be pushed a second time since its
-    //   lastPushed will be reset if it was sent once, and minDelay will fail
+    //   a particular account will not be pushed twice time since its
+    //   lastPushed will be reset if it was sent, and minDelay test will fail for subsequent subs
     toPublish = toPublish.concat(subscriptions);
 
     // temporary measure becaus we may be subscribed to accounts we don't own
     toPublish = toPublish.filter(function(subscription){
       return 'daniel'===subscription.accountId.substring(0,6);
     });
+
+    // rate limit Scope>Live;
+    // filter out if scope>Live && delay<minDelay
+    toPublish = toPublish.filter(function(subscription){
+      if (subscription.scopeId===0) return true;
+      var delay = now - (lastPushedOtherThanLive[subscription.accountId]||99999);
+      return !(delay < options.minDelayOtherThanLive); 
+    });
     
     // fetch only once (if required)
     if (toPublish.length>0){
       mirawatt.iMetricalFetch(function(err,feeds){
-        console.log('+feed sizes',sizes(feeds.feeds));
-
         toPublish.forEach(function(subscription){
-          console.log('  --subscription',subscription);
           var accountId = subscription.accountId;
-          lastPushed[accountId]=+new Date;
           var N=parseInt(accountId.substr(-1)); // danielBy2,4,8...
-          if (N>0){
-            feeds = mirawatt.byN(feeds,N);
-          }
+          N=N||1; // NaN => 1
+          feedsByN = mirawatt.byN(feeds,N);
           
-          client.set(accountId,feeds);
+          // if Live send only Live otherwise send all
+          if (subscription.scopeId===0){
+            // this assumes feeds[] is complete and ordered
+            feedsByN.feeds = [feedsByN.feeds[0]];
+          }
+          // console.log('--',feedsByN);
+          console.log('  --push',new Date().toISOString(),subscription);
+          
+          client.set(accountId,feedsByN);
+          if (subscription.scopeId!==0) lastPushedOtherThanLive[accountId]=now; // mark as pushed
         }); // foreach subscription
       }); // fetch
     }
