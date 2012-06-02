@@ -6,7 +6,10 @@ The new php client `php/feedJSON.php` now conforms to the mirawatt-api.
 * It adds sensorId array, and values are presented as an array of length 1.
 * It allows fetching each scope independantly.
 
-## Running
+## Running the client(s)
+
+    open http://mw-spec.jit.su/
+    while true; do node dclient.js -e http://mw-spec.jit.su; sleep 1; done
 
     open http://mw-spec.cloudfoundry.com/
     node client.js http://mw-spec.cloudfoundry.com/jsonrpc
