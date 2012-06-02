@@ -4,16 +4,17 @@ var dnodeStream = require('./lib/dnode-stream');
 
 var options = require('optimist').options('endpoint', {
   alias: 'e',
-  default : 'http://0.0.0.0:8080'
+  default : 'http://0.0.0.0:8080',
+  describe: 'e.g. -e http://mw-spec.cloudfoundry.com  -e http://mw-spec.jit.su'
 }).options('by', {
   alias: 'b',
   default : [2,8],
-  describe: ' sensor counts to simulate (may be multiple)'
+  describe: 'sensor counts to simulate (may be multiple)'
 }).options('forcePublishAfterDelay', {
-  default: 30000,
+  default: 120000,
   describe: 'Delay after which, publish, even if no acive subscription'
 }).options('minDelayOtherThanLive', {
-  default: 10000,
+  default: 30000,
   describe: "Don't send scope>Live if delay < minDelay"
 }).options('publishInterval', {
   default: 1000,
@@ -56,7 +57,18 @@ dnode(function (client, conn) {
     if (cb) cb(null,'OK');
   }
   
-  if (1) debugConn(conn);
+  // this seems to be necessary to keep the connection alive to the sensorhubs...
+  // we get pinged every 10 seconds (15 seconds is the threshhold)
+  var keepAliveCount=-1;
+  this.keepAlive = function(cb){    
+      keepAliveCount++;
+      // only log every hour (%360), every minute (%6)
+      if (keepAliveCount%360==0) console.log('keepAlive',keepAliveCount);
+      if (cb) cb(null,keepAliveCount);
+  }
+  
+  // if we want to see all connection events
+  // if (1) debugConn(conn);
   
   var intervalId;
   conn.on('ready',function(){
