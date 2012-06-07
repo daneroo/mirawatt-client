@@ -143,7 +143,7 @@ dnode(function (client, conn) {
           var accountId = subscription.accountId;
           var N=parseInt(accountId.substr(-1)); // danielBy2,4,8...
           N=N||1; // NaN => 1
-          feedsByN = mirawatt.byN(feeds,N);
+          feedsByN = mirawatt.byN(accountId,feeds,N);
           
           // if Live send only Live otherwise send all
           if (subscription.scopeId===0){

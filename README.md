@@ -8,15 +8,18 @@ The new php client `php/feedJSON.php` now conforms to the mirawatt-api.
 
 ## Running the client(s)
 
+    # dnode
     open http://mw-spec.jit.su/
     while true; do node dclient.js -e http://mw-spec.jit.su; sleep 1; done
 
+    # jsonrpc
     open http://mirawatt.cloudfoundry.com/
     while true; do node client.js http://mirawatt.cloudfoundry.com/jsonrpc; sleep 1; done
     
+    # POST to /incoming
+    open http://mirawatt.cloudfoundry.com/
+    while true; do node post-client.js http://mirawatt.cloudfoundry.com/incoming; sleep 1; done
     
-    open http://mw-spec.cloudfoundry.com/
-    node client.js http://mw-spec.cloudfoundry.com/jsonrpc
 
 ## Bridge to TED1000
 ### deploy php bridge from imetrical mysql.
