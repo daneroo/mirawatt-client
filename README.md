@@ -10,11 +10,11 @@ The new php client `php/feedJSON.php` now conforms to the mirawatt-api.
 
     # dnode
     open http://mw-spec.jit.su/
-    while true; do node dclient.js -e http://mw-spec.jit.su; sleep 1; done
+    while true; do node dnode-client.js -e http://mw-spec.jit.su; sleep 1; done
 
     # jsonrpc
     open http://mirawatt.cloudfoundry.com/
-    while true; do node client.js http://mirawatt.cloudfoundry.com/jsonrpc; sleep 1; done
+    while true; do node jsonrpc-client.js http://mirawatt.cloudfoundry.com/jsonrpc; sleep 1; done
     
     # POST to /incoming
     open http://mirawatt.cloudfoundry.com/
@@ -46,10 +46,3 @@ Found this binding to time.h [node-time](https://github.com/TooTallNate/node-tim
 ### curl command to invoke jsonrpc service
 
   curl -H "Content-Type: application/json" -d '{ "jsonrpc": "2.0", "method": "zing", "params": [42], "id":2 }' http://localhost:3000/jsonrpc
-
-### node client to invoke jsonrpc-service
-
-  node client.js
-
-### node client to invoke dnode-service (local-only)
-  
