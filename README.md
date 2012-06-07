@@ -11,6 +11,9 @@ The new php client `php/feedJSON.php` now conforms to the mirawatt-api.
     open http://mw-spec.jit.su/
     while true; do node dclient.js -e http://mw-spec.jit.su; sleep 1; done
 
+    open http://mirawatt.cloudfoundry.com/
+    node client.js http://mirawatt.cloudfoundry.com/jsonrpc
+    
     open http://mw-spec.cloudfoundry.com/
     node client.js http://mw-spec.cloudfoundry.com/jsonrpc
 
