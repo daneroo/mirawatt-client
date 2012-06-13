@@ -10,10 +10,9 @@ if (process.argv.length>2){
 console.log('endpoint',endpoint,process.argv);
 
 function push(accountId,feeds){
-  request.get({
+  request.post({
     uri: endpoint+'/'+accountId, 
     json : feeds,
-    method: 'POST'
   },function(error,response,body){
     if (error){
         console.log('remote.set('+accountId+',',feeds,') Error: ',error);
